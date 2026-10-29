@@ -1,0 +1,116 @@
+﻿@model AttendEdgeWebConsole.Domain.AMC
+<div class="modal fade" id="modal-contract" tabindex="-1" aria-labelledby="ContractModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                @if (Model.Id > 0)
+                {
+                    <h5 class="modal-title fs-5" id="ContractModalLabel">Edit Contract</h5>
+                }
+                else
+                {
+                    <h5 class="modal-title fs-5" id="ContractModalLabel">Add Contract</h5>
+                }
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+
+            <div class="modal-body">
+                @Html.HiddenFor(m => m.Id)
+
+                @if (ViewBag.ShowCompany)
+                {
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label> Company </label>
+                            @Html.DropDownListFor(m => m.CompanyId, ViewBag.Companies as List<SelectListItem>, "Select Company", new { @class = "form-control" })
+                        </div>
+                    </div>
+                }
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Name <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Enter Name" })
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="col">
+                        <label>Contact Person <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.ContactPerson, new { @class = "form-control", placeholder = "Enter Contact Person" })
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Mobile Number <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control", placeholder = "Enter Mobile Number", type = "tel" })
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="col">
+                        <label>Email Address<span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.EmailAddress, new { @class = "form-control", placeholder = "Enter Email", type = "email" })
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Services Covered <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.ServicesCovered, new { @class = "form-control", placeholder = "Enter Services Covered" })
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="col FileuploadBox">
+                        <label>Contract Document</label>
+                        @Html.TextBoxFor(m => m.ContractDocumentPath, new { type = "file", @class = "form-control", placeholder = "Document Path" })
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Contract Start Date <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.ContractStartDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                    </div>
+                    <div class="col">
+                        <label>Contract End Date <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.ContractEndDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Notes</label>
+                        @Html.TextAreaFor(m => m.Notes, new { @class = "form-control", placeholder = "Enter Notes", rows = "4" })
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="isActiveCheck">Is Active?</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <a href="javascript:void(0);" class="btn btn-primary btn-submit">Submit</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="@Url.Content("~/custom-js/amc/create.js")"></script>
+
+@Html.Hidden("NotificationType", (object)ViewBag.NotificationType)
+@Html.Hidden("NotificationMsg", (object)ViewBag.NotificationMsg)
+
+<script>
+    $(document).ready(function () {
+        var today = new Date().toISOString().split('T')[0];
+        $('input[name="ContractStartDate"]').val(today);
+        $('input[name="ContractEndDate"]').val(today);
+    });
+</script>

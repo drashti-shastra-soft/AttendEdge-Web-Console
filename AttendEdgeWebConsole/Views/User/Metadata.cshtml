@@ -1,0 +1,99 @@
+﻿@{
+    ViewBag.Title = "Metadata";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!--begin::Container-->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")">Home</a></li>
+                        <li class="breadcrumb-item active">User</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <!--end::Container-->
+    <!--begin::App Content-->
+    <section class="content">
+        <div class="col-12">
+            <div class="card card-primary card-tabs">
+                <div class="card-header p-0 pt-1">
+                    <ul class="nav nav-tabs" id="custom-tabs-two-tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="custom-tabs-user-tab" data-toggle="pill" href="#custom-tabs-user" role="tab" aria-controls="custom-tabs-user" aria-selected="true" data-id="@ViewBag.UserId">User</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="custom-tabs-documents-tab" data-toggle="pill" href="#custom-tabs-documents" role="tab" aria-controls="custom-tabs-documents" aria-selected="true" data-id="@ViewBag.UserId">Documents</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-body">
+                    <div class="tab-content" id="custom-tabs-two-tabContent">
+                        <div class="tab-pane fade show active" id="custom-tabs-user" role="tabpanel" aria-labelledby="custom-tabs-user-tab">
+                            @using (Ajax.BeginForm("Save", "User", new AjaxOptions() { UpdateTargetId = "div-custom-tabs-user", InsertionMode = InsertionMode.Replace, LoadingElementId = "loading-element" }, new { @id = "frmUser" }))
+                            {
+                                <input type="hidden" id="UserId" name="UserId" value="@ViewBag.UserId" />
+                                <div id="div-custom-tabs-user"></div>
+                            }
+                        </div>
+                        <div class="tab-pane fade show" id="custom-tabs-documents" role="tabpanel" aria-labelledby="custom-tabs-documents-tab">
+                            @using (Ajax.BeginForm("SaveUserDocument", "User", new AjaxOptions() { UpdateTargetId = "div-custom-tabs-documents", InsertionMode = InsertionMode.Replace, LoadingElementId = "loading-element" }, new { enctype = "multipart/form-data", @id = "frmUserImage" }))
+                            {
+                                <input type="hidden" id="UserId" name="UserId" value="@ViewBag.UserId" />
+                                <div id="div-custom-tabs-documents"></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<script>
+    $(document).ready(function () {
+        $('#custom-tabs-user-tab').on('click', function () {
+            var id = parseInt($(this).data('id'));
+            if (id > 0) {
+                fnGetUser(id);
+            }
+        });
+
+        $('#custom-tabs-documents-tab').on('click', function () {
+            var id = parseInt($(this).data('id'));
+            if (id > 0) {
+                fnGetDocuments(id);
+            }
+        });
+
+        $('#custom-tabs-user-tab').trigger('click');
+    });
+
+    function fnGetUser(id) {
+        fnHandleAjaxRequest({
+            url: `/User/Get/${id}`,
+            onSuccess: function (html) {
+                $('#div-custom-tabs-user').html(html);
+            }
+        });
+    }
+
+    function fnGetDocuments(id) {
+        fnHandleAjaxRequest({
+            url: `/User/GetUserDocument/${id}`,
+            onSuccess: function (html) {
+                $('#div-custom-tabs-documents').html(html);
+            }
+        });
+    }
+
+  
+</script>
+

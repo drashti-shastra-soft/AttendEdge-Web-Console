@@ -1,0 +1,26 @@
+﻿@model AttendEdgeWebConsole.Domain.Contact
+
+<div class="modal fade" id="modal-message" tabindex="-1" aria-labelledby="MessageInfoSModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fs-5" id="CompanyModalLabel">Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row mb-2">
+                    <div class="col">
+                        <label>Message <span class="text-danger">*</span></label>
+                        @Html.TextAreaFor(m => m.Message, new { @class = "form-control", placeholder = "Enter Message", rows = "3" })
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

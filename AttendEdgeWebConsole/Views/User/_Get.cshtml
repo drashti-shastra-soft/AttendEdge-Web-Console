@@ -1,0 +1,168 @@
+﻿@model AttendEdgeWebConsole.Domain.User
+@{ 
+    Layout = null;
+}
+
+<div class="card">
+    <div class="card-body">
+        @Html.HiddenFor(m => m.Id)
+
+        @if (ViewBag.ShowCompany)
+        {
+            <div class="row mb-3">
+                <div class="col">
+                    <label>Company</label>
+                    @Html.DropDownListFor(m => m.CompanyId, ViewBag.Companies as List<SelectListItem>, "Select Company", new { @class = "form-control" })
+                </div>
+            </div>
+        }
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>First Name <span class="text-danger">*</span></label>
+                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "Enter First Name" })
+                <span class="text-danger"></span>
+            </div>
+            <div class="col">
+                <label>Last Name<span class="text-danger">*</span></label>
+                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Enter Last Name" })
+                <span class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Email Address <span class="text-danger">*</span></label>
+                @Html.TextBoxFor(m => m.EmailAddress, new { @class = "form-control", placeholder = "Enter Email Address" })
+                <span class="text-danger"></span>
+            </div>
+
+            <div class="col">
+                <label>Mobile Number <span class="text-danger">*</span></label>
+                @Html.TextBoxFor(m => m.MobileNumber, new { @class = "form-control", placeholder = "Enter Mobile Number" })
+                <span class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(m => m.Password)
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-6">
+                <label>Role <span class="text-danger">*</span></label>
+                @Html.DropDownListFor(m => m.RoleId, ViewBag.Roles as List<SelectListItem>, "Select Role", new { @class = "form-control" })
+                <span class="text-danger" id="spnRole"></span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <div class="form-check">
+                    @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+                    <label class="form-check-label" for="isActiveCheck">Is Active?</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer clearfix" style="background-color: white; text-align:right">
+        <a href="javascript:void(0);" class="btn btn-primary btn-submit">Save</a>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $(".btn-submit").click(function () {
+            if (fnValid()) {
+                $('#frmUser').submit();
+            }
+        });
+
+        var notificationType = $.trim('@ViewBag.NotificationType');
+        var notificationMsg = $.trim('@ViewBag.NotificationMsg');
+
+        if (notificationType != null && notificationType != undefined && notificationType != '') {
+            if (notificationMsg != null && notificationMsg != undefined && notificationMsg != '') {
+                showToastr(notificationType, notificationMsg)
+            }
+        }
+
+
+        $('#MobileNumber').mask('+91 00000 00000', {
+            translation: {
+                '0': { pattern: /[0-9]/ }
+            },
+            onKeyPress: function (val, e, field, options) {
+                if (!val.startsWith('+91')) {
+                    field.val('+91 ' + val.replace(/[^\d]/g, '').substring(0, 10).replace(/(\d{5})(\d{0,5})/, '$1 $2'));
+                }
+            }
+        });
+
+        $('#EmailAddress').on('input', function () {
+              let val = $(this).val();
+
+              // Allow only valid email characters
+              val = val.replace(/[^a-zA-Z0-9@@._\-]/g, '');
+
+              // Prevent double @@ symbols
+              const parts = val.split('@@');
+              if (parts.length > 2) {
+                  val = parts[0] + '@@' + parts[1];
+              }
+
+              $(this).val(val);
+        });
+    });
+
+    function fnValid() {
+        var isValid = true;
+        var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        var firstName = $.trim($("#FirstName").val());
+        var lastName = $.trim($("#LastName").val());
+        var emailAddress = $.trim($("#EmailAddress").val());
+        var mobileNumber = $.trim($("#MobileNumber").val());
+        var roleId = $.trim($("#RoleId").val());
+
+        // FirstName
+        if (firstName == null || firstName == "" || firstName == undefined) {
+            $("#FirstName").next("span").text("First Name is required!");
+            isValid = false;
+        } else {
+            $("#FirstName").next("span").text("");
+        }
+
+        // LastName
+        if (lastName == null || lastName == "" || lastName == undefined) {
+            $("#LastName").next("span").text("Last Name is required!");
+            isValid = false;
+        } else {
+            $("#LastName").next("span").text("");
+        }
+
+
+        // Email Address
+        if (emailAddress == null || emailAddress == "" || emailAddress == undefined) {
+            $("#EmailAddress").next("span").text("Email Address  is required!");
+            isValid = false;
+        } else {
+            $("#EmailAddress").next("span").text("");
+        }
+
+        // Mobile Number
+        if (mobileNumber == null || mobileNumber == "" || mobileNumber == undefined) {
+            $("#MobileNumber").next("span").text("Mobile Number is required!");
+            isValid = false;
+        } else {
+            $("#MobileNumber").next("span").text("");
+        }
+
+
+        //Role
+        if (roleId == null || roleId == "" || roleId == undefined) {
+            $("#spnRole").text("Role is required!");
+            isValid = false;
+        } else {
+            $("#spnRole").text("");
+        }
+
+        return isValid;
+    }
+</script>

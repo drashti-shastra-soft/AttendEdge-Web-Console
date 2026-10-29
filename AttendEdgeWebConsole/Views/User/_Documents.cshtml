@@ -1,0 +1,320 @@
+﻿@model List<AttendEdgeWebConsole.Domain.UserDocument>
+
+<style>
+    .userDropzone {
+        border: 2px solid #01bec5;
+        border-radius: 5px;
+    }
+
+        .userDropzone .uploadme {
+            max-height: 90px;
+            margin-bottom: 10px;
+        }
+
+    .uploadme img {
+        max-width: 100px;
+    }
+
+    .uploadTitle {
+        font-size: 24px;
+        color: #424242;
+        text-transform: capitalize;
+    }
+
+    #existing-documents {
+        margin-top: 50px;
+    }
+
+    .UploadImageCard {
+        position: relative;
+        transition: 0.3s ease-in-out;
+        padding: 10px;
+        border: 1px solid #01bec5;
+        border-radius: 5px;
+        box-shadow: none !important;
+    }
+
+
+        .UploadImageCard img {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .UploadImageCard .card-body {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            padding: 0px;
+            opacity: 0;
+        }
+
+        .UploadImageCard:hover .card-body {
+            transform: translate(-50%, -50%) scale(1);
+            transition: 0.3s ease-in-out;
+            opacity: 1;
+        }
+
+        .UploadImageCard .btn-delete-image {
+            height: 50px;
+            width: 50px;
+            font-size: 22px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+</style>
+
+<section class="myDocument-holder">
+    <div class="container mt-4">
+        <div class="tab-content" id="myTabContent">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Dropzone -->
+                    <div class="dropzone" id="userDropzone" style="border: 2px solid #01bec5">
+                        <div class="dz-message uploadme">
+                            <img src="~/Content/Image/uploadfiles.png" class="img-fluid uploadme" />
+                            <h3 class="uploadTitle">Drop files here or click to upload</h3>
+                        </div>
+                    </div>
+
+                    <!-- Existing  -->
+                    <div class="row mb-3" id="existing-documents">
+                        @if (Model != null && Model != null && Model.Count > 0)
+                        {
+                            foreach (var file in Model)
+                            {
+                                if (file.MimeType == "application/pdf")
+                                {
+                                    <div class="col-lg-4 col-md-6 col-sm-6 file-card" data-image-id="@file.Id">
+                                        <div class="card UploadImageCard text-center" onclick="openPdf(@file.Base64String)">
+                                            <i class="fas fa-file-pdf fa-5x text-danger mt-3"></i>
+                                            <div class="card-body">
+                                                <button type="button" class="btn btn-sm btn-danger btn-delete-image" data-id="@file.Id">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-lg-4 col-md-6 col-sm-6 file-card" data-image-id="@file.Id">
+                                        <div class="card UploadImageCard">
+                                            <img src="data:@file.MimeType;base64,@file.Base64String" class="card-img-top img-fluid" />
+                                            <div class="card-body text-center">
+                                                <button type="button" class="btn btn-sm btn-danger btn-delete-image" data-id="@file.Id">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="text-center mt-5">
+                    <h6 class="text-muted">Documents section content will go here.</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+    var notificationType = $.trim('@ViewBag.NotificationType');
+    var notificationMsg = $.trim('@ViewBag.NotificationMsg');
+
+    if (notificationType != null && notificationType != undefined && notificationType != '') {
+        if (notificationMsg != null && notificationMsg != undefined && notificationMsg != '') {
+            showToastr(notificationType, notificationMsg)
+        }
+    }
+
+    Dropzone.autoDiscover = false;
+    var userDropzone = new Dropzone("#userDropzone", {
+        url: "/User/SaveUserDocument",
+        autoProcessQueue: true,      // Auto upload on file selection
+        uploadMultiple: false,
+        parallelUploads: 1,
+        paramName: "file",
+        maxFilesize: 3,
+        acceptedFiles: ".jpg,.jpeg,.png,.pdf",
+        addRemoveLinks: true,
+        init: function () {
+            this.on("sending", function (file, xhr, formData) {
+                const userId = $("#UserId").val();
+                formData.append("UserId", userId);
+            });
+
+            this.on("success", function (file, response) {
+                userDropzone.removeFile(file); // Clean UI
+                const userId = $("#UserId").val();
+                fetchUserDocument(userId);
+            });
+
+            this.on("error", function (file, errorMessage) {
+                if (file.size > 3 * 1024 * 1024) {
+                    showToastr('error', `File "${file.name}" exceeds 3 MB limit.`);
+                } else {
+                    showToastr('error', `Upload failed for ${file.name}: ${errorMessage}`);
+                }
+                this.removeFile(file);
+            });
+        }
+    });
+
+    async function uploadUserDocumentAsync(userId, files) {
+        for (const file of files) {
+            try {
+                await uploadSingleFile(userId, file);
+                fetchUserDocument(userId);
+                userDropzone.removeFile(file);
+            } catch (error) {
+                console.error(`Upload failed for ${file.name}:`, error);
+                showToastr('error', `Upload failed for ${file.name}: ${error}`);
+                break;
+            }
+        }
+    }
+
+    function uploadSingleFile(userId,  file) {
+        return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("userId", userId);
+            formData.append("file", file);
+
+            $.ajax({
+                url: "/User/SaveUserDocument",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    resolve(response);
+                },
+                error: function (xhr, status, error) {
+                    reject(error);
+                }
+            });
+        });
+    }
+
+    async function uploadUserDocumentAsync(files) {
+        const userId = $("#UserId").val();
+        for (const file of files) {
+            try {
+                await uploadSingleFile(userId, file);
+                await fetchUserDocument(userId);
+            } catch (error) {
+                console.error(`Upload failed for ${file.name}:`, error);
+                showToastr(result.NotificationType, result.NotificationMsg)
+                alert("An upload failed. See console for details.");
+                break;
+            }
+        }
+    }
+
+    function uploadSingleFile(userId, file) {
+        return new Promise((resolve, reject) => {
+
+            const formData = new FormData();
+            formData.append("userId", userId);
+            formData.append("file", file);
+
+            $.ajax({
+                url: "/User/SaveUserDocument",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    resolve(response);
+                },
+                error: function (xhr, status, error) {
+                    reject(error);
+                }
+            });
+        });
+    }
+
+    function fetchUserDocument(userId) {
+        $.ajax({
+            url: `/User/FetchUserDocument?userId=${userId}`,
+            type: "GET",
+            dataType: "json",
+            beforeSend: function () {
+                $('#loading-element').show();
+            },
+            success: function (documents) {
+                const container = document.getElementById("existing-documents");
+                container.innerHTML = '';
+                if (Array.isArray(documents) && documents.length > 0) {
+                    documents.forEach(file => {
+                        let previewHtml = '';
+
+                        if (file.MimeType === 'application/pdf') {
+                            // Display PDF icon
+                            previewHtml = `
+                                <div class="col-lg-4 col-md-6 col-sm-6 file-card" data-image-id="${file.Id}">
+                                    <div class="card UploadImageCard text-center">
+                                        <i class="fas fa-file-pdf fa-5x text-danger mt-3"></i>
+                                        <div class="card-body">
+                                            <p class="card-text">${file.FileName}</p>
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete-image" data-id="${file.Id}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Display image preview
+                            previewHtml = `
+                                <div class="col-lg-4 col-md-6 col-sm-6 file-card" data-image-id="${file.Id}">
+                                    <div class="card UploadImageCard">
+                                        <img src="data:${file.MimeType};base64,${file.Base64String}" class="card-img-top img-fluid" alt="${file.FileName}" />
+                                        <div class="card-body text-center">
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete-image" data-id="${file.Id}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        container.insertAdjacentHTML('beforeend', previewHtml);
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                $('#loading-element').hide();
+                $('#existing-documents').empty();
+            }, complete: function () {
+                $('#loading-element').hide();
+            }
+        });
+    }
+
+    $(document).on("click", ".btn-delete-image", function () {
+        var imageId = $(this).data("id");
+        var container = $(this).closest(".file-card");
+
+        fnHandleAjaxRequest({
+            url: `/User/DeleteUserDocument/${imageId}`,
+            onSuccess: function (response) {
+                let result = typeof response === 'string' ? JSON.parse(response) : response;
+                showToastr(result.NotificationType, result.NotificationMsg)                
+                container.fadeOut(300, function () { $(this).remove(); });
+            }
+        });
+    });
+</script>
